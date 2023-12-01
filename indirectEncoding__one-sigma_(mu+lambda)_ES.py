@@ -117,7 +117,7 @@ def create_problem(fid: int):
     l = logger.Analyzer(
         root="data",  # the working directory in which a folder named `folder_name` (the next argument) will be created to store data
         folder_name="run",  # the folder name to which the raw performance data will be stored
-        algorithm_name="one-sigma ES (mu+sigma selection)",  # name of your algorithm
+        algorithm_name="one-sigma_(mu+lambda)_ES",  # name of your algorithm
         algorithm_info="Practical assignment of the EA course",
     )
     # attach the logger to the problem
