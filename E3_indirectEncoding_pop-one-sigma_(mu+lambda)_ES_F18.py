@@ -15,33 +15,61 @@ np.random.seed(42)
 # Initialization
 def initialization(mu):
     parent = np.random.choice([0, 1], size=(mu, dimension), replace=True)
-    return parent       
+    initial_sigma = 0.05 * (31 - 0)
+    return parent, initial_sigma
+
+
+# Encoding 
+def encoding(population):
+    new_population = []
+    for individual in population:
+        individual_segmented = [individual[i:i + 5] for i in range(0, len(individual), 5)]
+        new_individual = [list(map(str, int_list)) for int_list in individual_segmented]
+        for i, encoded_list in enumerate(new_individual):
+            new_individual[i] = int("".join(encoded_list), 2)
+        new_population.append(new_individual)
+    return np.array(new_population)
+
+
+# Decoding
+def decoding(population):
+    decoded_population = []
+    for individual in population:
+        decoded_individual = []
+        for encoded_value in individual:
+            binary_string = bin(encoded_value)[2:].zfill(5)  # Convert to binary and fill with leading zeros
+            decoded_individual.extend(list(map(int, binary_string)))
+        decoded_population.append(decoded_individual)
+    return np.array(decoded_population)
 
 
 # Discrete recombination
-def recombination(parent, num_offsprings):
+def recombination(population, num_offsprings):
     offsprings = []
     for _ in range(num_offsprings):
-        [p1,p2] = np.random.choice(len(parent), 2, replace = False)
+        [p1,p2] = np.random.choice(len(population), 2, replace = False)
         offspring = []
-        for i in range(dimension):
-            offspring.append(np.random.choice([parent[p1][i], parent[p2][i]]))
+        for i in range(len(population[p1])):
+            offspring.append(np.random.choice([population[p1][i], population[p2][i]]))
         offsprings.append(offspring)
     return np.array(offsprings)
 
 
-# Bit flip mutation
-def mutation(population, mutation_probability):
+# One-sigma mutation
+def mutation(population, parent_sigma, tau):
+    mutated_sigma = parent_sigma * np.exp(np.random.normal(0, tau))
     mutated_population = np.copy(population)
     for individual in mutated_population:
-        for i in range(dimension):
-            if np.random.rand() < mutation_probability:
-                individual[i] = 1 - individual[i]
-    return mutated_population
+        for i in range(len(individual)):
+            individual[i] = int(individual[i] + np.random.normal(0, mutated_sigma))
+            individual[i] = individual[i] if individual[i] <= 31 else 31
+            individual[i] = individual[i] if individual[i] >= 0 else 0
+    return mutated_population, mutated_sigma
 
 
-# (mu, lambda) selection
-def selection(population, problem, mu):
+# (mu + lambda) selection
+def selection(parent_pop, offspring_pop, problem, mu):
+    population = np.concatenate((parent_pop, offspring_pop), axis=0)
     fitness_values = [problem(x) for x in population]
     sorted_indices = np.argsort(fitness_values)[::-1]
     sorted_population = [population[i] for i in sorted_indices]
@@ -55,21 +83,26 @@ def s3674320_s3649024_ES(problem):
     # hint: F18 and F19 are Boolean problems. Consider how to present bitstrings as real-valued vectors in ES
     # initial_pop = ... make sure you randomly create the first population
     mu_ = 15
-    lambda_ = 100
-    mutation_rate = 0.1
-    initial_pop = initialization(mu_)
+    lambda_ = 200
+    initial_pop, sigma = initialization(mu_)
+    tau_0 =  1.0 / np.sqrt(len(initial_pop[0])/5)
     # `problem.state.evaluations` counts the number of function evaluation automatically,
     # which is incremented by 1 whenever you call `problem(x)`.
     # You could also maintain a counter of function evaluations if you prefer.
     while problem.state.evaluations < budget:
+        # encoding
+        encoded_pop = encoding(initial_pop)
         # recombination
-        recombined_pop = recombination(initial_pop, lambda_)
+        recombined_pop = recombination(encoded_pop, lambda_)
         # mutation
-        mutated_pop = mutation(recombined_pop, mutation_rate)
+        mutated_pop, sigma = mutation(recombined_pop, sigma, tau_0)
+        # decoding
+        decoded_pop = decoding(mutated_pop)
         # selection
-        selected_pop, fitness_values = selection(mutated_pop, problem, mu_)
+        selected_pop, fitness_values = selection(initial_pop, decoded_pop, problem, mu_)
         # reset
         initial_pop = selected_pop
+    # show best individual in the end
     print(selected_pop[0], fitness_values[0])
     # no return value needed 
 
@@ -84,7 +117,7 @@ def create_problem(fid: int):
     l = logger.Analyzer(
         root="data",  # the working directory in which a folder named `folder_name` (the next argument) will be created to store data
         folder_name="run",  # the folder name to which the raw performance data will be stored
-        algorithm_name="bit-flip_(mu,lambda)_ES",  # name of your algorithm
+        algorithm_name="pop-one-sigma ES: 15+200",  # name of your algorithm
         algorithm_info="Practical assignment of the EA course",
     )
     # attach the logger to the problem

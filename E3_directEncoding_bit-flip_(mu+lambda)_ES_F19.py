@@ -55,9 +55,9 @@ def selection(parent_pop, offspring_pop, problem, mu):
 def s3674320_s3649024_ES(problem):
     # hint: F18 and F19 are Boolean problems. Consider how to present bitstrings as real-valued vectors in ES
     # initial_pop = ... make sure you randomly create the first population
-    mu_ = 15
-    lambda_ = 100
-    mutation_rate = 0.1
+    mu_ = 50
+    lambda_ = 500
+    mutation_rate = 1/50
     initial_pop = initialization(mu_)
     # `problem.state.evaluations` counts the number of function evaluation automatically,
     # which is incremented by 1 whenever you call `problem(x)`.
@@ -85,7 +85,7 @@ def create_problem(fid: int):
     l = logger.Analyzer(
         root="data",  # the working directory in which a folder named `folder_name` (the next argument) will be created to store data
         folder_name="run",  # the folder name to which the raw performance data will be stored
-        algorithm_name="bit-flip_(mu+lambda)_ES",  # name of your algorithm
+        algorithm_name="bit-flip ES: 50+500",  # name of your algorithm
         algorithm_info="Practical assignment of the EA course",
     )
     # attach the logger to the problem
