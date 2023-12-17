@@ -129,7 +129,7 @@ def create_problem(fid: int):
     l = logger.Analyzer(
         root="data",  # the working directory in which a folder named `folder_name` (the next argument) will be created to store data
         folder_name="run",  # the folder name to which the raw performance data will be stored
-        algorithm_name="evolution_strategy_f19",  # name of your algorithm
+        algorithm_name="ES_F19",  # name of your algorithm
         algorithm_info="Practical assignment of the EA course",
     )
     # attach the logger to the problem
